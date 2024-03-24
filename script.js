@@ -35,37 +35,80 @@
 // });
 
 // fetch
-const searchButton = document.querySelector(".search-button");
-searchButton.addEventListener("click", function () {
-  const inputKeyword = document.querySelector(".input-keyword");
-  fetch("https://www.omdbapi.com/?&apikey=53f1d949&s=" + inputKeyword.value)
-    .then((response) => response.json())
-    .then((response) => {
-      const movies = response.Search;
-      let cards = "";
-      movies.forEach((movie) => (cards += showCard(movie)));
-      const movieContainer = document.querySelector(".movie-container");
-      movieContainer.innerHTML = cards;
+// const searchButton = document.querySelector(".search-button");
+// searchButton.addEventListener("click", function () {
+//   const inputKeyword = document.querySelector(".input-keyword");
+//   fetch("https://www.omdbapi.com/?&apikey=53f1d949&s=" + inputKeyword.value)
+//     .then((response) => response.json())
+//     .then((response) => {
+//       const movies = response.Search;
+//       let cards = "";
+//       movies.forEach((movie) => (cards += showCard(movie)));
+//       const movieContainer = document.querySelector(".movie-container");
+//       movieContainer.innerHTML = cards;
 
-      // ketika tombol detail di-klik
-      const modalDetailButton = document.querySelectorAll(
-        ".modal-detail-button"
-      );
-      modalDetailButton.forEach((button) => {
-        button.addEventListener("click", function () {
-          const imdbid = this.dataset.imdbid;
-          fetch("https://www.omdbapi.com/?&apikey=53f1d949&i=" + imdbid)
-            .then((response) => response.json())
-            .then((film) => {
-              const filmDetail = showFilmDetail(film);
-              const modalBody = document.querySelector(".modal-body");
-              modalBody.innerHTML = filmDetail;
-            });
-        });
-      });
-    })
-    .catch();
+//       // ketika tombol detail di-klik
+//       const modalDetailButton = document.querySelectorAll(
+//         ".modal-detail-button"
+//       );
+//       modalDetailButton.forEach((button) => {
+//         button.addEventListener("click", function () {
+//           const imdbid = this.dataset.imdbid;
+//           fetch("https://www.omdbapi.com/?&apikey=53f1d949&i=" + imdbid)
+//             .then((response) => response.json())
+//             .then((film) => {
+//               const filmDetail = showFilmDetail(film);
+//               const modalBody = document.querySelector(".modal-body");
+//               modalBody.innerHTML = filmDetail;
+//             });
+//         });
+//       });
+//     })
+//     .catch();
+// });
+
+// fetch refactor (async await)
+const searchButton = document.querySelector(".search-button");
+searchButton.addEventListener("click", async function () {
+  const inputKeyword = document.querySelector(".input-keyword");
+
+  const movies = await getMovies(inputKeyword.value);
+  updateUI(movies);
 });
+
+// event binding
+document.addEventListener("click", async function (element) {
+  if (element.target.classList.contains("modal-detail-button")) {
+    const imdbid = element.target.dataset.imdbid;
+    const movieDetail = await getMovieDetail(imdbid);
+    updateUIDetail(movieDetail);
+  }
+});
+
+function getMovies(keyword) {
+  return fetch("https://www.omdbapi.com/?&apikey=53f1d949&s=" + keyword)
+    .then((response) => response.json())
+    .then((response) => response.Search);
+}
+
+function updateUI(movies) {
+  let cards = "";
+  movies.forEach((movie) => (cards += showCard(movie)));
+  const movieContainer = document.querySelector(".movie-container");
+  movieContainer.innerHTML = cards;
+}
+
+function getMovieDetail(imdbid) {
+  return fetch("https://www.omdbapi.com/?&apikey=53f1d949&i=" + imdbid)
+    .then((response) => response.json())
+    .then((movie) => movie);
+}
+
+function updateUIDetail(movie) {
+  const movieDetail = showMovieDetail(movie);
+  const modalBody = document.querySelector(".modal-body");
+  modalBody.innerHTML = movieDetail;
+}
 
 function showCard(movie) {
   return `<div class="col-md-4 my-3">
@@ -81,27 +124,27 @@ function showCard(movie) {
             </div>`;
 }
 
-function showFilmDetail(film) {
+function showMovieDetail(movie) {
   return `<div class="container-fluid">
             <div class="row">
                 <div class="col-md-3">
-                    <img src="${film.Poster}" alt="" class="img-fluid" />
+                    <img src="${movie.Poster}" alt="" class="img-fluid" />
                 </div>
                 <div class="col-md">
                     <ul class="list-group">
-                        <li class="list-group-item"><h4>${film.Title} </h4></li>
+                        <li class="list-group-item"><h4>${movie.Title} </h4></li>
                         <li class="list-group-item">
-                            <strong>Director : </strong> ${film.Director}
+                            <strong>Director : </strong> ${movie.Director}
                         </li>
                         <li class="list-group-item">
-                            <strong>Actors : </strong> ${film.Actors}
+                            <strong>Actors : </strong> ${movie.Actors}
                         </li>
                         <li class="list-group-item">
-                            <strong>Writer : </strong> ${film.Writer}
+                            <strong>Writer : </strong> ${movie.Writer}
                         </li>
                         <li class="list-group-item">
                             <strong>Plot : </strong> <br />
-                            ${film.Plot}
+                            ${movie.Plot}
                         </li>
                     </ul>
                 </div>
